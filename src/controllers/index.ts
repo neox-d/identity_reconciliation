@@ -16,23 +16,28 @@ class ContactController {
                     where: { phoneNumber: phoneNumber },
                 });
 
-                if ((emailCheck != null && phoneCheck === null) || (emailCheck === null && phoneCheck != null)) {
-                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary" });
+                if (emailCheck === null && phoneCheck != null) {
+                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: phoneCheck.id });
+                } else if (emailCheck != null && phoneCheck === null) {
+                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: emailCheck.id });
                 } else if (emailCheck === null && phoneCheck === null) {
                     const record = await ContactInstance.create({ ...req.body, linkPrecedence: "primary" });
+                } else if (emailCheck.id != phoneCheck.id) {
+
+                    if (emailCheck.linkedId == null && phoneCheck.linkedId == null) {
+                        if (emailCheck.createdAt > phoneCheck.createdAt) {
+                            phoneCheck.linkPrecedence = "secondary";
+                            phoneCheck.linkedId = emailCheck.id;
+                            await phoneCheck.save();
+                        } else {
+                            emailCheck.linkPrecedence = "secondary";
+                            emailCheck.linkedId = phoneCheck.id;
+                            await emailCheck.save();
+                        }
+                    }
+                    
                 }
 
-                if (emailCheck.linkedId == null && phoneCheck.linkedId == null) {
-                    if (emailCheck.createdAt > phoneCheck.createdAt) {
-                        phoneCheck.linkPrecedence = "secondary";
-                        phoneCheck.linkedId = emailCheck.id;
-                        await phoneCheck.save();
-                    } else {
-                        emailCheck.linkPrecedence = "secondary";
-                        emailCheck.linkedId = phoneCheck.id;
-                        await emailCheck.save();
-                    }
-                }
 
                 // return res.status(200).json({ emailCheck, phoneCheck })
 
