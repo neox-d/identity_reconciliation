@@ -1,6 +1,6 @@
 import express from 'express';
 
-import ContactController from "../controllers/index";
+import ContactController from "../controllers/controller";
 
 const router = express.Router();
 
