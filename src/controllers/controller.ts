@@ -22,6 +22,7 @@ class ContactController {
             secondaryContactIds: []
         };
 
+
         if (record != null) {
             if (record.linkPrecedence == 'primary') {
                 const secondaryContacts: any = await ContactInstance.findAll({
@@ -35,9 +36,14 @@ class ContactController {
 
                 // Load secondary contacts
                 for (const index in secondaryContacts) {
-                    contact['emails'].push(record[index].email);
-                    contact['phoneNumbers'].push(record[index].phoneNumber);
-                    contact['secondaryContactIds'].push(record[index].id)
+
+                    if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                        contact['emails'].push(secondaryContacts[index].email);
+                    }
+                    if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                        contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                    }
+                    contact['secondaryContactIds'].push(secondaryContacts[index].id)
                 }
 
                 return res.status(200).json({ contact })
@@ -55,11 +61,17 @@ class ContactController {
                 contact['emails'].push(primaryContact.email);
                 contact['phoneNumbers'].push(primaryContact.phoneNumber);
 
+
                 // Load secondary contacts
                 for (const index in secondaryContacts) {
-                    contact['emails'].push(record[index].email);
-                    contact['phoneNumbers'].push(record[index].phoneNumber);
-                    contact['secondaryContactIds'].push(record[index].id)
+
+                    if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                        contact['emails'].push(secondaryContacts[index].email);
+                    }
+                    if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                        contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                    }
+                    contact['secondaryContactIds'].push(secondaryContacts[index].id)
                 }
 
                 return res.status(200).json({ contact })
@@ -103,8 +115,13 @@ class ContactController {
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
@@ -131,14 +148,19 @@ class ContactController {
                         contact['emails'].push(recordwithPhone.email);
                         contact['phoneNumbers'].push(recordwithPhone.phoneNumber);
 
-                        const secondaryContacts: any = ContactInstance.findAll({
+                        const secondaryContacts: any = await ContactInstance.findAll({
                             where: { linkedId: recordwithPhone.id }
                         })
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
@@ -151,7 +173,7 @@ class ContactController {
                         
 
                         if (recordwithEmail.createdAt > primaryOfPhone.createdAt) {
-                            const newSecondaryContact: any = ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: recordwithEmail.id })
+                            const newSecondaryContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: recordwithEmail.id })
                             primaryOfPhone.linkPrecedence = 'secondary'
                             primaryOfPhone.linkedId = recordwithEmail.id
                             primaryOfPhone.save()
@@ -180,15 +202,20 @@ class ContactController {
 
                             // Load secondary contacts
                             for (const index in secondaryContacts) {
-                                contact['emails'].push(secondaryContacts[index].email)
-                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                                if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                    contact['emails'].push(secondaryContacts[index].email);
+                                }
+                                if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                    contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                                }
                                 contact['secondaryContactIds'].push(secondaryContacts[index].id)
                             }
 
                             return res.status(200).json({ contact })
 
                         } else {
-                            const newSecondaryContact: any = ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: recordwithPhone.linkedId })
+                            const newSecondaryContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: recordwithPhone.linkedId })
 
                             recordwithEmail.linkPrecedence = 'secondary'
                             recordwithEmail.linkedId = recordwithPhone.linkedId
@@ -215,8 +242,13 @@ class ContactController {
 
                             // Load secondary contacts
                             for (const index in secondaryContacts) {
-                                contact['emails'].push(secondaryContacts[index].email)
-                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                                if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                    contact['emails'].push(secondaryContacts[index].email);
+                                }
+                                if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                    contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                                }
                                 contact['secondaryContactIds'].push(secondaryContacts[index].id)
                             }
 
@@ -252,14 +284,19 @@ class ContactController {
                         contact['emails'].push(recordwithPhone.email);
                         contact['phoneNumbers'].push(recordwithPhone.phoneNumber);
 
-                        const secondaryContacts: any = ContactInstance.findAll({
+                        const secondaryContacts: any = await ContactInstance.findAll({
                             where: { linkedId: recordwithPhone.id }
                         })
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
@@ -282,14 +319,19 @@ class ContactController {
                         contact['emails'].push(primaryOfEmail.email);
                         contact['phoneNumbers'].push(primaryOfEmail.phoneNumber);
 
-                        const secondaryContacts: any = ContactInstance.findAll({
+                        const secondaryContacts: any = await ContactInstance.findAll({
                             where: { linkedId: primaryOfEmail.id }
                         })
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
@@ -322,21 +364,26 @@ class ContactController {
                         contact['emails'].push(primaryOfEmail.email);
                         contact['phoneNumbers'].push(primaryOfEmail.phoneNumber);
 
-                        const secondaryContacts: any = ContactInstance.findAll({
+                        const secondaryContacts: any = await ContactInstance.findAll({
                             where: { linkedId: primaryOfEmail.id }
                         })
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
                         return res.status(200).json({ contact })
 
                     } else {
-                        const newSecondaryContact: any = ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: primaryOfPhone.id })
+                        const newSecondaryContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: 'secondary', linkedId: primaryOfPhone.id })
                         
                         primaryOfEmail.linkPrecedence = 'secondary'
                         primaryOfEmail.linkedId = primaryOfPhone.id
@@ -362,8 +409,13 @@ class ContactController {
 
                         // Load secondary contacts
                         for (const index in secondaryContacts) {
-                            contact['emails'].push(secondaryContacts[index].email)
-                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber)
+
+                            if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                                contact['emails'].push(secondaryContacts[index].email);
+                            }
+                            if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                                contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                            }
                             contact['secondaryContactIds'].push(secondaryContacts[index].id)
                         }
 
@@ -375,7 +427,7 @@ class ContactController {
             if (recordwithEmail != null) {
                 if (recordwithEmail.linkPrecedence == 'primary') {
 
-                    const newContact: any = ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithEmail.id })
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithEmail.id })
                     const secondaryContacts: any = await ContactInstance.findAll({
                         where: { linkedId: recordwithEmail.id }
                     })
@@ -386,16 +438,21 @@ class ContactController {
 
                     // Load secondary contacts
                     for (const index in secondaryContacts) {
-                        contact['emails'].push(record[index].email);
-                        contact['phoneNumbers'].push(record[index].phoneNumber);
-                        contact['secondaryContactIds'].push(record[index].id)
+
+                        if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                            contact['emails'].push(secondaryContacts[index].email);
+                        }
+                        if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                        }
+                        contact['secondaryContactIds'].push(secondaryContacts[index].id)
                     }
 
                     return res.status(200).json({ contact })
 
                 } else {
-                    const newContact: any = ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithEmail.linkedId })
-                    const primaryContact: any = ContactInstance.findByPk(recordwithEmail.linkedId)
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithEmail.linkedId })
+                    const primaryContact: any = await ContactInstance.findByPk(recordwithEmail.linkedId)
                     const secondaryContacts: any = await ContactInstance.findAll({
                         where: { linkedId: recordwithEmail.linkedId }
                     })
@@ -407,9 +464,14 @@ class ContactController {
 
                     // Load secondary contacts
                     for (const index in secondaryContacts) {
-                        contact['emails'].push(record[index].email);
-                        contact['phoneNumbers'].push(record[index].phoneNumber);
-                        contact['secondaryContactIds'].push(record[index].id)
+
+                        if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                            contact['emails'].push(secondaryContacts[index].email);
+                        }
+                        if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                        }
+                        contact['secondaryContactIds'].push(secondaryContacts[index].id)
                     }
 
                     return res.status(200).json({ contact })
@@ -420,7 +482,7 @@ class ContactController {
             if (recordwithPhone != null) {
                 if (recordwithPhone.linkPrecedence == 'primary') {
 
-                    const newContact: any = ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithPhone.id })
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithPhone.id })
                     const secondaryContacts: any = await ContactInstance.findAll({
                         where: { linkedId: recordwithPhone.id }
                     })
@@ -432,16 +494,21 @@ class ContactController {
 
                     // Load secondary contacts
                     for (const index in secondaryContacts) {
-                        contact['emails'].push(record[index].email);
-                        contact['phoneNumbers'].push(record[index].phoneNumber);
-                        contact['secondaryContactIds'].push(record[index].id)
+
+                        if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                            contact['emails'].push(secondaryContacts[index].email);
+                        }
+                        if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                        }
+                        contact['secondaryContactIds'].push(secondaryContacts[index].id)
                     }
 
                     return res.status(200).json({ contact })
 
                 } else {
-                    const newContact: any = ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithPhone.linkedId })
-                    const primaryContact: any = ContactInstance.findByPk(recordwithPhone.linkedId)
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: recordwithPhone.linkedId })
+                    const primaryContact: any = await ContactInstance.findByPk(recordwithPhone.linkedId)
                     const secondaryContacts: any = await ContactInstance.findAll({
                         where: { linkedId: recordwithPhone.linkedId }
                     })
@@ -453,16 +520,21 @@ class ContactController {
 
                     // Load secondary contacts
                     for (const index in secondaryContacts) {
-                        contact['emails'].push(record[index].email);
-                        contact['phoneNumbers'].push(record[index].phoneNumber);
-                        contact['secondaryContactIds'].push(record[index].id)
+
+                        if (!contact['emails'].includes(secondaryContacts[index].email)) {
+                            contact['emails'].push(secondaryContacts[index].email);
+                        }
+                        if (!contact['phoneNumbers'].includes(secondaryContacts[index].phoneNumber)) {
+                            contact['phoneNumbers'].push(secondaryContacts[index].phoneNumber);
+                        }
+                        contact['secondaryContactIds'].push(secondaryContacts[index].id)
                     }
 
                     return res.status(200).json({ contact })
                 }
             }
 
-            const newPrimaryContact: any = ContactInstance.create({ ...req.body, linkPrecedence: 'primary' })
+            const newPrimaryContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: 'primary' })
             
             // Load Primary Contact
             contact['emails'].push(email);
