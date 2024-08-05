@@ -23,7 +23,7 @@ class ContactController {
         };
 
 
-        if (record != null) {
+        if (record !== null) {
             if (record.linkPrecedence == 'primary') {
                 const secondaryContacts: any = await ContactInstance.findAll({
                     where: { linkedId: record.id }

@@ -1,103 +1,105 @@
 import { Request, Response } from "express";
-import { Op, Sequelize } from "sequelize";
+import { Model, Op, QueryTypes, Sequelize } from "sequelize";
 import { ContactInstance } from "../models";
+import db from "../config/sqlite3";
 import contact from "../interfaces/contact";
+
+// const { QueryTypes } = require('sequelize');
 
 class ContactController {
         async identify(req: Request, res: Response) {
+            const { email, phoneNumber } = req.body;
 
-                const { email, phoneNumber } = req.body;
+            const query = `
+            with InitialContacts as 
+                (select id, linkedId 
+                from Contacts 
+                where email=:email or phoneNumber=:phoneNumber) 
+            select * from Contacts where 
+                id in (select id from InitialContacts) or 
+                linkedId in (select linkedId from InitialContacts) or 
+                id in (select linkedId from InitialContacts) or 
+                linkedId in (select id from InitialContacts)
+            order by createdAt
+            `;
+            
+            const records: any = await db.query(query, {
+              replacements: {
+                email: email,
+                phoneNumber: phoneNumber
+              },
+              type: QueryTypes.SELECT
+            })
 
-                let emailCheck: any = await ContactInstance.findOne({
-                    where: { email: email },
-                });
+            let contact: contact = {
+                primaryContactId: 0,
+                emails: [],
+                phoneNumbers: [],
+                secondaryContactIds: []
+            };
 
-                let phoneCheck: any = await ContactInstance.findOne({
-                    where: { phoneNumber: phoneNumber },
-                });
+            if (Object.keys(records).length == 0) {
+                const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "primary" })
+                contact.primaryContactId = newContact.id;
+                if (email !== null) { contact['emails'].push(newContact.email) }
+                if (phoneNumber !== null) { contact['phoneNumbers'].push(newContact.phoneNumber) }
 
-                if (emailCheck === null && phoneCheck != null) {
-                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: phoneCheck.id });
-                } else if (emailCheck != null && phoneCheck === null) {
-                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: emailCheck.id });
-                } else if (emailCheck === null && phoneCheck === null) {
-                    const record = await ContactInstance.create({ ...req.body, linkPrecedence: "primary" });
-                } else if (emailCheck.id != phoneCheck.id) {
+                return res.status(200).json( { contact })
 
-                    if (emailCheck.linkedId == null && phoneCheck.linkedId == null) {
-                        if (emailCheck.createdAt > phoneCheck.createdAt) {
-                            phoneCheck.linkPrecedence = "secondary";
-                            phoneCheck.linkedId = emailCheck.id;
-                            await phoneCheck.save();
-                        } else {
-                            emailCheck.linkPrecedence = "secondary";
-                            emailCheck.linkedId = phoneCheck.id;
-                            await emailCheck.save();
-                        }
+            } else {
+
+                contact.primaryContactId = records['0'].id
+
+                let ids = [];
+
+                for (const index in records) {
+
+                    if (index != '0') {
+                        ids.push(records[index].id);
+                        contact['secondaryContactIds'].push(records[index].id)
+                    }
+
+                    if (!contact['emails'].includes(records[index].email) && records[index].email) {
+                        contact['emails'].push(records[index].email);
                     }
                     
+                    if (!contact['phoneNumbers'].includes(records[index].phoneNumber) && records[index].phoneNumber) {
+                        contact['phoneNumbers'].push(records[index].phoneNumber);
+                    }
                 }
 
+                const updateQuery = `
+                        UPDATE 
+                            Contacts
+                        SET
+                            linkPrecedence = :linkPrecedence,
+                            linkedId = :linkedId
+                        WHERE 
+                            id in (:ids)
+                            AND id <> :id;
+                        `;
+                await db.query(updateQuery, {
+                    replacements: {
+                        linkPrecedence: 'secondary',
+                        linkedId: records['0'].id,
+                        id: records['0'].id,
+                        ids: ids
+                    },
+                    type: QueryTypes.UPDATE
+                })
 
-                // return res.status(200).json({ emailCheck, phoneCheck })
-
-
-                let records: any = await ContactInstance.findAll({
-                        where: 
-                             Sequelize.or(
-                            { email: email },
-                            { phoneNumber: phoneNumber }
-                        )
-                });
-
-                if (Object.keys(records).length != 0) {
-                    let contact: contact = {
-                        primaryContactId: 0,
-                        emails: [],
-                        phoneNumbers: [],
-                        secondaryContactIds: []
-                    };
-    
-                    for (const index in records) {
-                        if (records[index].linkPrecedence == "primary") {
-                            contact.primaryContactId = records['0'].id;
-                        }
-        
-                        if (records[index].phoneNumber != null && (!contact['phoneNumbers'].includes(records[index].phoneNumber))) {
-                            contact["phoneNumbers"].push(records[index].phoneNumber);
-                        }
-        
-                        if (records[index].email != null && (!contact['emails'].includes(records[index].email))) {
-                            contact["emails"].push(records[index].email);
-                        } 
-        
-                        if (records[index].linkPrecedence == "secondary") {
-                            contact["secondaryContactIds"].push(records[index].id);
-                            let primaryContact: any = await ContactInstance.findAll({
-                                where: { id: records[index].linkedId }
-                            });
-
-                            if (Object.keys(primaryContact).length != 0) {
-
-                                if (primaryContact['0'].linkPrecedence == "primary") {
-                                    contact.primaryContactId = primaryContact['0'].id;
-                                }
-
-                                if (primaryContact['0'].phoneNumber != null && (!contact['phoneNumbers'].includes(primaryContact['0'].phoneNumber))) {
-                                    contact["phoneNumbers"].push(primaryContact['0'].phoneNumber);
-                                }
-                
-                                if (primaryContact['0'].email != null && (!contact['emails'].includes(primaryContact['0'].email))) {
-                                    contact["emails"].push(primaryContact['0'].email);
-                                }
-                            }
-                        }
-                    
-                        }
-                    return res.status(200).json({ contact });
-                } 
-
-                
+                if (!contact['emails'].includes(email)) {
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: records['0'].id })
+                    contact['emails'].push(newContact.email);
+                    contact['secondaryContactIds'].push(newContact.id);
+                }
+                if (!contact['phoneNumbers'].includes(phoneNumber)) {
+                    const newContact: any = await ContactInstance.create({ ...req.body, linkPrecedence: "secondary", linkedId: records['0'].id })
+                    contact['phoneNumbers'].push(newContact.phoneNumber);
+                    contact['secondaryContactIds'].push(newContact.id);
+                }
+                return res.status(200).json({ contact })
+            }
         }
 }
 
